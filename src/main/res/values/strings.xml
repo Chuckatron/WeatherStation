@@ -9,4 +9,5 @@
     <string name="title_mph">mph</string>
     <string name="title_celcius">°C</string>
     <string name="title_hpa">hPa</string>
+    <string name="title_percent">%</string>
 </resources>
