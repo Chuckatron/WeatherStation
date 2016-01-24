@@ -1,5 +1,6 @@
 package uk.co.warmlight.apps.weatherstation;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -7,6 +8,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -23,6 +25,8 @@ import java.util.Date;
 import java.util.Locale;
 
 public class Summary extends AppCompatActivity {
+
+
 
     public void processResponse(JSONObject Response) {
 
@@ -51,6 +55,8 @@ public class Summary extends AppCompatActivity {
             humidityView.setText(humidity);
             windspeedView.setText(windspeed);
             windDirectionView.setText(windDirection);
+
+            doToast("Fetched latest data");
         } catch (JSONException e) {
             Log.e("WeatherStation", "Cannot parse response", e);
         }
@@ -67,20 +73,22 @@ public class Summary extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                apiGetWeather();
+                apiGetWeather("Updating data...");
             }
         });
 
-        apiGetWeather();
+        apiGetWeather("");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        apiGetWeather();
+        apiGetWeather("Fetching data...");
     }
 
-    public void apiGetWeather() {
+    public void apiGetWeather(String status) {
+
+        doToast(status);
 
         // Instantiate the request queue
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -97,9 +105,21 @@ public class Summary extends AppCompatActivity {
             @Override
             public void onErrorResponse(VolleyError error) {
                 Log.e("WeatherStation", "Unable to get weather", error);
+                doToast("Unable to get weather data");
             }
         });
         queue.add(jso);
+    }
+
+    public void doToast(String message) {
+
+        if (message.length() > 0) {
+            final Context context = getApplicationContext();
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, message, duration);
+            toast.show();
+        }
+
     }
 
 }
