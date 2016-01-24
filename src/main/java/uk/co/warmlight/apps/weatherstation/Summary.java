@@ -15,7 +15,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
@@ -23,8 +23,39 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class Summary extends AppCompatActivity {
+
+    public void processResponse(JSONObject Response) {
+
+        final TextView timestampView = (TextView) findViewById(R.id.timestamp);
+        final TextView temperatureView = (TextView) findViewById(R.id.temperature);
+        final TextView pressureView = (TextView) findViewById(R.id.pressure);
+        final TextView humidityView = (TextView) findViewById(R.id.humidity);
+        final TextView windspeedView = (TextView) findViewById(R.id.windspeed);
+        final TextView windDirectionView = (TextView) findViewById(R.id.windDirection);
+
+        try {
+            String temperature = Response.getString("temperature");
+            String pressure = Response.getString("pressure");
+            String humidity = Response.getString("humidity");
+            String windspeed = Response.getString("windspeed");
+            String windDirection = Response.getString("wind_direction");
+            long unixTimestamp = Response.getLong("timestamp");
+            long javaTimestamp = unixTimestamp * 1000;
+            Date date = new Date(javaTimestamp);
+            String timestamp = new SimpleDateFormat("dd/MM/yyyy @ kk:mm", Locale.ENGLISH).format(date);
+            timestampView.setText(timestamp);
+            temperatureView.setText(temperature);
+            pressureView.setText(pressure);
+            humidityView.setText(humidity);
+            windspeedView.setText(windspeed);
+            windDirectionView.setText(windDirection);
+        } catch (JSONException e) {
+            Log.e("WeatherStation", "Cannot parse response", e);
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,51 +73,29 @@ public class Summary extends AppCompatActivity {
             }
         });
 
-        final TextView timestampView = (TextView) findViewById(R.id.timestamp);
-        final TextView temperatureView = (TextView) findViewById(R.id.temperature);
-        final TextView pressureView = (TextView) findViewById(R.id.pressure);
-        final TextView humidityView = (TextView) findViewById(R.id.humidity);
-        final TextView windspeedView = (TextView) findViewById(R.id.windspeed);
-        final TextView windDirectionView = (TextView) findViewById(R.id.windDirection);
+        apiGetWeather();
+    }
+
+    public void apiGetWeather() {
 
         // Instantiate the request queue
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "http://weather.warmlight.co.uk/api.json";
 
         // Request a string response from the provided URL
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
+        JsonObjectRequest jso = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
                     @Override
-                public void onResponse(String response) {
-                        try {
-                            JSONObject jso = new JSONObject(response);
-                            String temperature = jso.getString("temperature");
-                            String pressure = jso.getString("pressure");
-                            String humidity = jso.getString("humidity");
-                            String windspeed = jso.getString("windspeed");
-                            String windDirection = jso.getString("wind_direction");
-                            long unixTimestamp = jso.getLong("timestamp");
-                            long javaTimestamp = unixTimestamp * 1000;
-                            Date date = new Date(javaTimestamp);
-                            String timestamp = new SimpleDateFormat("dd/MM/yyyy @ kk:mm").format(date);
-                            timestampView.setText(timestamp);
-                            temperatureView.setText(temperature);
-                            pressureView.setText(pressure);
-                            humidityView.setText(humidity);
-                            windspeedView.setText(windspeed);
-                            windDirectionView.setText(windDirection);
-                        } catch (JSONException e) {
-                            Log.e("WeatherStation", "Unexpected JSON exception", e);
-                        }
+                    public void onResponse(JSONObject response) {
+                        processResponse(response);
                     }
-        }, new Response.ErrorListener() {
+                }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                temperatureView.setText("That didn't work");
+                Log.e("WeatherStation", "Unable to get weather", error);
             }
         });
-        queue.add(stringRequest);
-
+        queue.add(jso);
     }
 
     @Override
