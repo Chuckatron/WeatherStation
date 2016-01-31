@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.NoConnectionError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -94,7 +95,7 @@ public class Summary extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);
         String url = "http://weather.warmlight.co.uk/api.json";
 
-        // Request a string response from the provided URL
+        // Request a JSON object response from the provided URL
         JsonObjectRequest jso = new JsonObjectRequest(Request.Method.GET, url, null,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -104,8 +105,14 @@ public class Summary extends AppCompatActivity {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.e("WeatherStation", "Unable to get weather", error);
-                doToast("Unable to get weather data");
+                // No internet connection
+                if(error instanceof NoConnectionError) {
+                    doToast("Unable to contact server, check your internet connection");
+                } else {
+                    // Something else went wrong
+                    Log.e("WeatherStation", "Unable to get weather", error);
+                    doToast("Unable to get weather data");
+                }
             }
         });
         queue.add(jso);
